@@ -1,9 +1,13 @@
 package it.polito.tdp.gosales;
 
 import java.net.URL;
+import java.util.Collections;
+import java.util.List;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.gosales.model.ArcoStampa;
 import it.polito.tdp.gosales.model.Model;
+import it.polito.tdp.gosales.model.Retailers;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -31,16 +35,16 @@ public class FXMLController {
     private Button btnSimula;
 
     @FXML
-    private ComboBox<?> cmbAnno;
+    private ComboBox<Integer> cmbAnno;
 
     @FXML
-    private ComboBox<?> cmbNazione;
+    private ComboBox<String> cmbNazione;
 
     @FXML
     private ComboBox<?> cmbProdotto;
 
     @FXML
-    private ComboBox<?> cmbRivenditore;
+    private ComboBox<Retailers> cmbRivenditore;
 
     @FXML
     private TextArea txtArchi;
@@ -62,12 +66,67 @@ public class FXMLController {
 
     @FXML
     void doAnalizzaComponente(ActionEvent event) {
-
+    	
+    	Retailers r = this.cmbRivenditore.getValue();
+    	
+    	if(r == null) {
+    		this.txtResult.appendText("Selezionare un rivenditore per continuare.");
+    		return;
+    	}
+    	
+    	this.txtResult.appendText("\n\n"+this.model.calcolaComponente(r));
+    	
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
-
+    	
+    	this.txtResult.clear();
+    	
+    	Integer anno = this.cmbAnno.getValue();
+    	
+    	String country = this.cmbNazione.getValue();
+    	
+    	if(anno == null || country == null) {
+    		this.txtResult.appendText("Selezionare un anno e una nazione per continuare.");
+    		return;
+    	}
+    	
+    	Integer x = 0;
+    	try {
+    	    x = Integer.parseInt(this.txtNProdotti.getText().strip());
+    	} catch (NumberFormatException e) {
+    	    txtResult.setText("Inserisci un valore numerico per i prodotti.");
+    	    return;
+    	}
+    	if (x <= 0) { 
+    	    txtResult.setText("Inserisci un numero positivo.");
+    	    return;
+    	}
+    	
+    	this.model.creaGrafo(country, anno, x);
+    	
+    	this.txtResult.appendText(this.model.infoGrafo());
+    	
+    	List<Retailers> ret = this.model.getVertici();
+    	
+    	Collections.sort(ret);
+    	
+    	for(Retailers r : ret) {
+    		this.txtVertici.appendText("\n"+r);
+    	}
+    	
+    	
+    	for(ArcoStampa a : this.model.getArchi()) {
+    		this.txtArchi.appendText("\n"+a);
+    	}
+    	
+    	this.cmbRivenditore.getItems().addAll(this.model.getVertici());
+    	
+    	this.cmbRivenditore.setDisable(false);
+    	
+    	this.btnAnalizzaComponente.setDisable(false);
+    	
     }
 
     @FXML
@@ -95,6 +154,11 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	
+    	for(int a = 2015; a<=2018; a++) {
+    		this.cmbAnno.getItems().add(a);
+    	}
+    	this.cmbNazione.getItems().addAll(this.model.getCountry());
     }
 
 }
